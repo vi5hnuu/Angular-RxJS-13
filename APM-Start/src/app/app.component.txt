@@ -1,0 +1,87 @@
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {delay, filter, map, Observable, of, Subscription, take, tap} from "rxjs";
+import {fromArrayLike} from "rxjs/internal/observable/innerFrom";
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
+})
+export class AppComponent implements OnInit{
+  title = 'angularRXJS7';
+  private _nums:number[]=[1,2,3,4,5,6,7,8,9]
+  num:number=0
+  nums:number[]=[];
+  ngOnInit() {
+    // fromArrayLike(this._nums).pipe(delay(1000)).subscribe(num=>{
+    //   this.num=num;
+    // })
+
+    // of(this._nums).pipe(delay(1000)).subscribe(nums=>{
+    //   this.nums=nums;
+    // })
+
+    // fromArrayLike(this._nums).pipe(delay(1000)).subscribe(num=>{
+    //   console.log(num)
+    // })
+    //
+    // of(this._nums).pipe(delay(1000)).subscribe(nums=>{
+    //   console.log(nums)
+    // })
+
+    // of(...this._nums).pipe(map(num=>{
+    //   console.log('mapping : ',num,'->',num*2);
+    //   return num*2;
+    // }),filter(num=>{
+    //   console.log('filtering :',num);
+    //   return num>7;
+    // }),take(1),tap({next:(num)=>{
+    //     console.log('tapping : ',num)
+    //   }})).subscribe(num=>{
+    //   console.log('got a number : ',num)
+    // })
+
+    ///throwing an error
+    // fromArrayLike(this._nums).pipe(map(num=>{
+    //   console.log('mapping : ',num,'->',num*2);
+    //   // if(num>10) throw new Error('num>10');
+    //   if(num>6) throw new Error('num>10');
+    //   return num*2;
+    // })).subscribe({
+    //   next:num=>{console.log('got a number : ',num)},
+    //   error:err=>{console.log('error occured: ',err)},
+    //   complete:()=>{console.log('observable completed.')}
+    // })
+
+    //taking and exiting before giving change of throwing an error
+    // fromArrayLike(this._nums).pipe(map(num=>{
+    //   console.log('mapping : ',num,'->',num*2);
+    //   // if(num>10) throw new Error('num>10');
+    //   if(num>6) throw new Error('num>10');
+    //   return num*2;
+    // }),take(1)).subscribe({
+    //   next:num=>{console.log('got a number : ',num)},
+    //   error:err=>{console.log('error occured: ',err)},
+    //   complete:()=>{console.log('observable completed.')}
+    // })
+
+
+
+    fromArrayLike(this._nums).pipe(this.myMap((val)=>val*3)).subscribe({
+      next:num=>{console.log('got a number : ',num)},
+      error:err=>{console.log('error occured: ',err)},
+      complete:()=>{console.log('observable completed.')}
+    })
+  }
+
+  myMap(fn:(val:any)=>{}){
+    return (inputObservable:Observable<any>)=>new Observable(observer=>{
+        return inputObservable.subscribe({
+          next:val=>observer.next(fn(val)),
+          error:(err)=>observer.error(err),
+          complete:()=>observer.complete()
+        })
+      })
+    }
+
+}

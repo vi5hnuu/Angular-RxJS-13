@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
-import { catchError, Observable, tap, throwError } from 'rxjs';
+import {catchError, forkJoin, map, Observable, tap, throwError} from 'rxjs';
 
-import { Product } from './product';
+import { Product } from '../model/product';
+import {ProductCategoryService} from "../../product-categories/product-category.service";
 
 @Injectable({
   providedIn: 'root'
@@ -11,16 +12,19 @@ import { Product } from './product';
 export class ProductService {
   private productsUrl = 'api/products';
   private suppliersUrl = 'api/suppliers';
-  
-  constructor(private http: HttpClient) { }
+  products$=this.http.get<Product[]>(this.productsUrl)
+    .pipe(
+      tap(data => console.log('Products: ', JSON.stringify(data))),
+      catchError(this.handleError)
+    );
 
-  getProducts(): Observable<Product[]> {
-    return this.http.get<Product[]>(this.productsUrl)
-      .pipe(
-        tap(data => console.log('Products: ', JSON.stringify(data))),
-        catchError(this.handleError)
-      );
-  }
+  productsWithCategory$ = forkJoin([this.products$,this.poductCategoryService.productCategories$]).pipe(map(([products,categories])=>{
+    return products.map((product)=>{
+      product.category=categories.find(category=>category.id===product.categoryId)?.name || 'other'
+      return product;
+    })
+  }))
+  constructor(private http: HttpClient,private poductCategoryService:ProductCategoryService) { }
 
   private fakeProduct(): Product {
     return {

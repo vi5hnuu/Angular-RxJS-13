@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { Supplier } from '../../suppliers/supplier';
-import { Product } from '../product';
+import { Product } from '../model/product';
 
-import { ProductService } from '../product.service';
+import { ProductService } from '../service/product.service';
 
 @Component({
   selector: 'pm-product-detail',
