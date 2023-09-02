@@ -15,7 +15,7 @@ import {ProductCategoryService} from "../../product-categories/product-category.
 export class ProductListComponent implements OnDestroy {
   pageTitle = 'Product List';
   errorMessage = '';
-  private categorySelectedAction=new Subject<number>()
+  private categorySelectedAction=new BehaviorSubject<number>(0)
   categorySelectedAction$=this.categorySelectedAction.asObservable();
 
   categories$= this.productCategoryService.productCategories$.pipe(catchError((err:string)=>{
@@ -23,7 +23,7 @@ export class ProductListComponent implements OnDestroy {
     return EMPTY;
   }));
 
-  productsWithCategory$: Observable<Product[]> = combineLatest([this.productService.productsWithCategory$,this.categorySelectedAction$.pipe(startWith(0))]).pipe(map(([productsWithCategory,categoryId])=>{
+  productsWithCategory$: Observable<Product[]> = combineLatest([this.productService.productsWithCategory$,this.categorySelectedAction$]).pipe(map(([productsWithCategory,categoryId])=>{
     return productsWithCategory.filter((product:Product) => categoryId ? product.categoryId === categoryId : true);
   }),catchError((err:string)=>{
     this.errorMessage=err;
