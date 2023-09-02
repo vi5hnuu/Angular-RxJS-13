@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component, OnDestroy, OnInit} from '@angular/core';
 
-import {BehaviorSubject, catchError, combineLatest, EMPTY, map, Observable, Subject} from 'rxjs';
+import {BehaviorSubject, catchError, combineLatest, EMPTY, map, Observable, startWith, Subject} from 'rxjs';
 import {ProductCategory} from '../../product-categories/product-category';
 
 import {Product} from '../model/product';
@@ -23,8 +23,8 @@ export class ProductListComponent implements OnDestroy {
     return EMPTY;
   }));
 
-  productsWithCategory$: Observable<Product[]> = combineLatest([this.productService.productsWithCategory$,this.categorySelectedAction$]).pipe(map(([productsWithCategory,categoryId])=>{
-    return productsWithCategory.filter(product => categoryId ? product.categoryId === categoryId : true);
+  productsWithCategory$: Observable<Product[]> = combineLatest([this.productService.productsWithCategory$,this.categorySelectedAction$.pipe(startWith(0))]).pipe(map(([productsWithCategory,categoryId])=>{
+    return productsWithCategory.filter((product:Product) => categoryId ? product.categoryId === categoryId : true);
   }),catchError((err:string)=>{
     this.errorMessage=err;
     return EMPTY;
