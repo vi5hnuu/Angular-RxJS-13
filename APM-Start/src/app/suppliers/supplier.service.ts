@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
-import {throwError, Observable, of, map, Subscription} from 'rxjs';
+import {throwError, Observable, of, map, Subscription, concatMap} from 'rxjs';
 import {Supplier} from "./supplier";
 
 @Injectable({
@@ -14,15 +14,16 @@ export class SupplierService {
   constructor(private http: HttpClient) {
     console.log('suppier service initiated.')
     this.subscriptions.push(this.suppliersWithMap$.subscribe({
-      next:(suppObs$)=>{
-        this.subscriptions.push(suppObs$.subscribe(supp=>console.log(supp)))
+      next:(supplier)=>{
+        console.log(supplier);
       }
     }))
 
     //clear subscriptions on destroy...
+    console.log(this.subscriptions)
   }
 
-  suppliersWithMap$=of(1,5,8).pipe(map((id)=> this.http.get<Supplier>(`${this.suppliersUrl}/${id}`)))
+  suppliersWithMap$=of(1,5,8).pipe(concatMap((id)=> this.http.get<Supplier>(`${this.suppliersUrl}/${id}`)))
 
   private handleError(err: HttpErrorResponse): Observable<never> {
     // in a real world app, we may send the server to some remote logging infrastructure
