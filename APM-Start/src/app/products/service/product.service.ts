@@ -1,7 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
-import {catchError, forkJoin, map, Observable, tap, throwError} from 'rxjs';
+import {
+  BehaviorSubject,
+  catchError,
+  combineLatest,
+  forkJoin,
+  map,
+  merge,
+  Observable, scan, shareReplay,
+  Subject,
+  tap,
+  throwError
+} from 'rxjs';
 
 import { Product } from '../model/product';
 import {ProductCategoryService} from "../../product-categories/product-category.service";
@@ -12,20 +23,47 @@ import {ProductCategoryService} from "../../product-categories/product-category.
 export class ProductService {
   private productsUrl = 'api/products';
   private suppliersUrl = 'api/suppliers';
+
+  private productSelectedSubject=new BehaviorSubject<number>(1)
+  productSelectedAction$=this.productSelectedSubject.asObservable()
+  private productInsertSubject=new Subject<Product>()
+  productInsertActionObservable$ = this.productInsertSubject.asObservable();
+
+
   products$=this.http.get<Product[]>(this.productsUrl)
     .pipe(
       tap(data => console.log('Products: ', JSON.stringify(data))),
       catchError(this.handleError)
     );
 
-  productsWithCategory$ = forkJoin([this.products$,this.poductCategoryService.productCategories$]).pipe(map(([products,categories])=>{
+  productsWithCategory$ = combineLatest([this.products$,this.poductCategoryService.productCategories$]).pipe(map(([products,categories])=>{
     return products.map((product)=>{
       product.category=categories.find(category=>category.id===product.categoryId)?.name || 'other'
       return product;
     })
-  }))
+  }),shareReplay(1))
+
+  selectedProduct$ = combineLatest([this.productsWithCategory$,this.productSelectedAction$]).pipe(map(([productsWithCategory,selectedProductId])=>{
+    return productsWithCategory.find(product=>product.id === selectedProductId);
+  }),shareReplay(1))
+
+
+  productsWithAdd$ = merge(this.productsWithCategory$,this.productInsertActionObservable$).pipe(scan((acc,value)=>{
+    if(value instanceof Array){
+      return [...acc,...value];
+    }
+    return [...acc,value];
+  },[] as Product[]))
+
   constructor(private http: HttpClient,private poductCategoryService:ProductCategoryService) { }
 
+  setSelectedProductId(selectedId: number) {
+    this.productSelectedSubject.next(selectedId);
+  }
+
+  addProduct(product: Product) {
+    this.productInsertSubject.next(product);
+  }
   private fakeProduct(): Product {
     return {
       id: 42,
