@@ -16,6 +16,7 @@ import {
 
 import { Product } from '../model/product';
 import {ProductCategoryService} from "../../product-categories/product-category.service";
+import {SupplierService} from "../../suppliers/supplier.service";
 
 @Injectable({
   providedIn: 'root'
@@ -55,7 +56,7 @@ export class ProductService {
     return [...acc,value];
   },[] as Product[]))
 
-  constructor(private http: HttpClient,private poductCategoryService:ProductCategoryService) { }
+  constructor(private http: HttpClient,private poductCategoryService:ProductCategoryService,private suppierService:SupplierService) { }
 
   setSelectedProductId(selectedId: number) {
     this.productSelectedSubject.next(selectedId);
